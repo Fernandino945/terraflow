@@ -1,0 +1,27 @@
+# ─────────────────────────────────────────────────────────────
+# render.yaml — Configuración de despliegue en Render.com
+# Sube este proyecto a GitHub y conéctalo en render.com
+# ─────────────────────────────────────────────────────────────
+
+services:
+  # ── Servicio 1: API FastAPI (Backend) ──────────────────────
+  - type: web
+    name: terraflow-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"
+    healthCheckPath: /health
+
+  # ── Servicio 2: Frontend (Nginx con HTML estático) ─────────
+  - type: web
+    name: terraflow-frontend
+    runtime: static
+    staticPublishPath: ./frontend
+    plan: free
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

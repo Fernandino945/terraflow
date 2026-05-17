@@ -1,0 +1,30 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────
+# USO LOCAL (desarrollo)
+# Para producción, desplegar en Render.com (ver README.md)
+# ─────────────────────────────────────────────────────────────
+
+services:
+  api:
+    build: .
+    container_name: terraflow-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+
+  frontend:
+    image: nginx:alpine
+    container_name: terraflow-frontend
+    ports:
+      - "3000:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html
+      - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - api
+    restart: unless-stopped

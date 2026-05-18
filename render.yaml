@@ -16,12 +16,13 @@ services:
     healthCheckPath: /health
 
   # ── Servicio 2: Frontend (Nginx con HTML estático) ─────────
-  - type: web
+  - type: static
     name: terraflow-frontend
-    runtime: static
-    staticPublishPath: ./frontend
+    staticPublishPath: frontend
     plan: free
     routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
+      - path: "/*"
+        methods:
+          - GET
+          - HEAD
+        missingRoutePolicy: serve_index_html

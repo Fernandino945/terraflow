@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TerraFlow — Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:       #0a0f0a;
+      --bg2:      #111711;
+      --bg3:      #182018;
+      --border:   #2a3a2a;
+      --green:    #4ade80;
+      --green-d:  #16a34a;
+      --yellow:   #facc15;
+      --red:      #f87171;
+      --blue:     #60a5fa;
+      --text:     #e2f0e2;
+      --muted:    #6b8f6b;
+      --card-bg:  rgba(24, 32, 24, 0.9);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+      background-image:
+        radial-gradient(ellipse 80% 40% at 50% -10%, rgba(74,222,128,0.07) 0%, transparent 60%),
+        repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(42,58,42,0.3) 39px, rgba(42,58,42,0.3) 40px),
+        repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(42,58,42,0.15) 39px, rgba(42,58,42,0.15) 40px);
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem 2rem;
+      border-bottom: 1px solid var(--border);
+      background: rgba(10,15,10,0.95);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--green-d), var(--green));
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+    }
+    .logo h1 {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      color: var(--green);
+    }
+    .logo span {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--muted);
+      display: block;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .status-pill {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.72rem;
+      padding: 0.3rem 0.8rem;
+      border-radius: 999px;
+      border: 1px solid var(--green-d);
+      color: var(--green);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .pulse {
+      width: 7px; height: 7px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(74,222,128,0.5); }
+      50% { opacity: 0.8; box-shadow: 0 0 0 5px rgba(74,222,128,0); }
+    }
+    #last-update {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--muted);
+    }
+
+    /* ── Main layout ── */
+    main {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    /* ── Summary bar ── */
+    .summary-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .summary-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.1rem 1.3rem;
+      transition: border-color 0.3s;
+    }
+    .summary-card:hover { border-color: var(--green-d); }
+    .summary-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.62rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+    }
+    .summary-value {
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .summary-sub {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 0.25rem;
+    }
+
+    /* ── Section title ── */
+    .section-title {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Sensor grid ── */
+    .sensor-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+    .sensor-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+    .sensor-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--accent, var(--green));
+      opacity: 0.7;
+    }
+    .sensor-card:hover {
+      border-color: var(--green-d);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+    .sensor-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 1.2rem;
+    }
+    .sensor-id {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+    }
+    .sensor-zone {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .sensor-crop {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 0.1rem;
+    }
+    .semaphore {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .sem-green  { background: rgba(74,222,128,0.15); border: 2px solid var(--green); }
+    .sem-yellow { background: rgba(250,204,21,0.15); border: 2px solid var(--yellow); }
+    .sem-red    { background: rgba(248,113,113,0.15); border: 2px solid var(--red); }
+
+    .sensor-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1.2rem;
+    }
+    .metric {
+      background: rgba(0,0,0,0.2);
+      border-radius: 10px;
+      padding: 0.75rem;
+      text-align: center;
+    }
+    .metric-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.58rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.3rem;
+    }
+    .metric-value {
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+    .metric-unit {
+      font-size: 0.65rem;
+      color: var(--muted);
+    }
+
+    /* Humidity bar */
+    .humidity-bar-wrap {
+      margin-top: 0.5rem;
+    }
+    .humidity-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.62rem;
+      color: var(--muted);
+      margin-bottom: 0.3rem;
+    }
+    .humidity-bar-bg {
+      height: 6px;
+      background: rgba(255,255,255,0.07);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .humidity-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 0.8s cubic-bezier(0.34,1.56,0.64,1);
+    }
+
+    .decision-banner {
+      margin-top: 1rem;
+      padding: 0.6rem 0.9rem;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      line-height: 1.4;
+      font-family: 'Space Mono', monospace;
+    }
+    .banner-irrigate  { background: rgba(74,222,128,0.1);  border: 1px solid rgba(74,222,128,0.3);  color: var(--green); }
+    .banner-ok        { background: rgba(96,165,250,0.1);  border: 1px solid rgba(96,165,250,0.3);  color: var(--blue); }
+    .banner-blocked   { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); color: var(--red); }
+    .banner-saturated { background: rgba(250,204,21,0.1);  border: 1px solid rgba(250,204,21,0.3);  color: var(--yellow); }
+
+    /* ── Bottom row ── */
+    .bottom-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+    .panel {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+    }
+    .panel h3 {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+
+    /* Mini chart */
+    .mini-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+      height: 80px;
+    }
+    .bar-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 4px;
+    }
+    .bar-fill {
+      width: 100%;
+      border-radius: 4px 4px 0 0;
+      background: linear-gradient(to top, var(--green-d), var(--green));
+      transition: height 0.6s ease;
+      min-height: 4px;
+    }
+    .bar-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.5rem;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    /* Log */
+    #event-log {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      max-height: 180px;
+      overflow-y: auto;
+    }
+    #event-log::-webkit-scrollbar { width: 4px; }
+    #event-log::-webkit-scrollbar-track { background: transparent; }
+    #event-log::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .log-item {
+      display: flex;
+      gap: 0.75rem;
+      align-items: baseline;
+      font-size: 0.75rem;
+      padding: 0.5rem 0.75rem;
+      background: rgba(0,0,0,0.2);
+      border-radius: 8px;
+      border-left: 3px solid var(--border);
+    }
+    .log-item.log-on   { border-color: var(--green); }
+    .log-item.log-off  { border-color: var(--blue); }
+    .log-item.log-warn { border-color: var(--yellow); }
+    .log-time {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+
+    /* Refresh btn */
+    .refresh-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.05em;
+    }
+    .refresh-btn:hover { border-color: var(--green); color: var(--green); }
+    .refresh-btn.spinning svg { animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Loading skeleton */
+    .skeleton {
+      background: linear-gradient(90deg, var(--bg3) 25%, var(--border) 50%, var(--bg3) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 6px;
+      height: 1rem;
+    }
+    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+    /* Error */
+    .error-banner {
+      background: rgba(248,113,113,0.1);
+      border: 1px solid rgba(248,113,113,0.3);
+      color: var(--red);
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      margin-bottom: 1rem;
+      display: none;
+    }
+
+    @media (max-width: 900px) {
+      .summary-bar, .sensor-grid, .bottom-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🌱</div>
+    <div>
+      <h1>TERRAFLOW</h1>
+      <span>Sistema de Riego Inteligente · Fase 1</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="status-pill"><div class="pulse"></div> API Conectada</div>
+    <span id="last-update">—</span>
+    <button class="refresh-btn" id="refresh-btn" onclick="fetchAll()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px"><path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+      ACTUALIZAR
+    </button>
+  </div>
+</header>
+
+<main>
+  <div class="error-banner" id="error-banner">
+    ⚠ No se pudo conectar con la API en Render. Verifica que el servicio <strong>terraflow-api</strong> esté activo en <a href="https://dashboard.render.com" style="color:var(--red)">dashboard.render.com</a>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary-bar">
+    <div class="summary-card">
+      <div class="summary-label">Sensores activos</div>
+      <div class="summary-value" id="sum-sensors" style="color:var(--green)">—</div>
+      <div class="summary-sub">en línea</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">Zonas regando</div>
+      <div class="summary-value" id="sum-irrigating" style="color:var(--blue)">—</div>
+      <div class="summary-sub">de <span id="sum-total">—</span> zonas</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">Humedad promedio</div>
+      <div class="summary-value" id="sum-humidity" style="color:var(--yellow)">—</div>
+      <div class="summary-sub">% del suelo</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">Temp. promedio</div>
+      <div class="summary-value" id="sum-temp" style="color:var(--red)">—</div>
+      <div class="summary-sub">°C ambiente</div>
+    </div>
+  </div>
+
+  <!-- Sensors -->
+  <div class="section-title">Estado de sensores IoT</div>
+  <div class="sensor-grid" id="sensor-grid">
+    <!-- filled by JS -->
+    <div class="sensor-card"><div class="skeleton" style="height:120px"></div></div>
+    <div class="sensor-card"><div class="skeleton" style="height:120px"></div></div>
+    <div class="sensor-card"><div class="skeleton" style="height:120px"></div></div>
+    <div class="sensor-card"><div class="skeleton" style="height:120px"></div></div>
+  </div>
+
+  <!-- Bottom row -->
+  <div class="bottom-row">
+    <div class="panel">
+      <h3>Humedad por zona (últimas lecturas)</h3>
+      <div class="mini-chart" id="mini-chart"></div>
+    </div>
+    <div class="panel">
+      <h3>Registro de eventos</h3>
+      <ul id="event-log"></ul>
+    </div>
+  </div>
+</main>
+
+<script>
+  // RENDER: API desplegada en Render
+  const API = 'https://terraflow-z3dj.onrender.com';
+  const eventLog = [];
+
+  function getHumidityColor(h) {
+    if (h < 40)  return 'var(--red)';
+    if (h > 85)  return 'var(--yellow)';
+    return 'var(--green)';
+  }
+
+  function getSemaphore(decision) {
+    if (decision.should_irrigate) return ['sem-green', '💧'];
+    if (decision.reason.includes('saturado')) return ['sem-yellow', '⚠'];
+    if (decision.reason.includes('crítica')) return ['sem-red', '🥶'];
+    return ['sem-green', '✓'];
+  }
+
+  function getBannerClass(decision) {
+    if (decision.should_irrigate) return 'banner-irrigate';
+    if (decision.reason.includes('saturado')) return 'banner-saturated';
+    if (decision.reason.includes('crítica')) return 'banner-blocked';
+    return 'banner-ok';
+  }
+
+  function getAccentColor(decision) {
+    if (decision.should_irrigate) return 'var(--green)';
+    if (decision.reason.includes('saturado')) return 'var(--yellow)';
+    if (decision.reason.includes('crítica')) return 'var(--red)';
+    return 'var(--blue)';
+  }
+
+  function renderSensorCard(reading, decision) {
+    const [semClass, semIcon] = getSemaphore(decision);
+    const bannerClass = getBannerClass(decision);
+    const accent = getAccentColor(decision);
+    const hColor = getHumidityColor(reading.humidity);
+    const hPct = Math.min(reading.humidity, 100);
+
+    return `
+      <div class="sensor-card" style="--accent:${accent}">
+        <div class="sensor-header">
+          <div>
+            <div class="sensor-id">${reading.sensor_id} · ${reading.zone || ''}</div>
+            <div class="sensor-zone">${reading.zone || reading.sensor_id}</div>
+            <div class="sensor-crop">🌿 ${reading.crop || 'Cultivo'}</div>
+          </div>
+          <div class="semaphore ${semClass}">${semIcon}</div>
+        </div>
+        <div class="sensor-metrics">
+          <div class="metric">
+            <div class="metric-label">Humedad</div>
+            <div class="metric-value" style="color:${hColor}">${reading.humidity}</div>
+            <div class="metric-unit">%</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Temp.</div>
+            <div class="metric-value" style="color:var(--yellow)">${reading.temperature}</div>
+            <div class="metric-unit">°C</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Conduct.</div>
+            <div class="metric-value" style="color:var(--blue)">${reading.conductivity}</div>
+            <div class="metric-unit">mS/cm</div>
+          </div>
+        </div>
+        <div class="humidity-bar-wrap">
+          <div class="humidity-bar-label"><span>Humedad del suelo</span><span>${reading.humidity}%</span></div>
+          <div class="humidity-bar-bg">
+            <div class="humidity-bar-fill" style="width:${hPct}%;background:${hColor}"></div>
+          </div>
+        </div>
+        <div class="decision-banner ${bannerClass}">
+          ${decision.reason}
+        </div>
+      </div>`;
+  }
+
+  function renderMiniChart(readings) {
+    const chart = document.getElementById('mini-chart');
+    chart.innerHTML = readings.map(r => `
+      <div class="bar-col">
+        <div class="bar-fill" style="height:${r.humidity * 0.7}px"></div>
+        <div class="bar-label">${r.sensor_id}</div>
+      </div>`).join('');
+  }
+
+  function addLog(msg, type = 'off') {
+    const time = new Date().toLocaleTimeString('es-CL');
+    eventLog.unshift({ msg, type, time });
+    if (eventLog.length > 20) eventLog.pop();
+    const log = document.getElementById('event-log');
+    log.innerHTML = eventLog.map(e =>
+      `<li class="log-item log-${e.type}"><span class="log-time">${e.time}</span><span>${e.msg}</span></li>`
+    ).join('');
+  }
+
+  async function fetchAll() {
+    const btn = document.getElementById('refresh-btn');
+    btn.classList.add('spinning');
+    document.getElementById('error-banner').style.display = 'none';
+
+    try {
+      const [sensorsRes, decisionsRes] = await Promise.all([
+        fetch(`${API}/sensors/status`),
+        fetch(`${API}/irrigation/decision`),
+      ]);
+
+      const sensorsData  = await sensorsRes.json();
+      const decisionData = await decisionsRes.json();
+
+      const readings  = sensorsData.readings;
+      const decisions = decisionData.decisions;
+
+      // Summary
+      document.getElementById('sum-sensors').textContent    = readings.length;
+      document.getElementById('sum-irrigating').textContent = decisionData.zones_irrigating;
+      document.getElementById('sum-total').textContent      = decisionData.total_zones;
+      const avgHum  = (readings.reduce((a, r) => a + r.humidity, 0)    / readings.length).toFixed(1);
+      const avgTemp = (readings.reduce((a, r) => a + r.temperature, 0) / readings.length).toFixed(1);
+      document.getElementById('sum-humidity').textContent = avgHum;
+      document.getElementById('sum-temp').textContent     = avgTemp;
+
+      // Sensor cards
+      document.getElementById('sensor-grid').innerHTML =
+        readings.map((r, i) => renderSensorCard(r, decisions[i])).join('');
+
+      // Mini chart
+      renderMiniChart(readings);
+
+      // Log events
+      decisions.forEach(d => {
+        if (d.should_irrigate) addLog(`${d.sensor_id}: Riego ACTIVADO — ${d.humidity}% hum.`, 'on');
+      });
+
+      // Timestamp
+      document.getElementById('last-update').textContent =
+        'Actualizado ' + new Date().toLocaleTimeString('es-CL');
+
+    } catch (err) {
+      document.getElementById('error-banner').style.display = 'block';
+      addLog('Error al conectar con la API', 'warn');
+    } finally {
+      btn.classList.remove('spinning');
+    }
+  }
+
+  // Initial load + auto-refresh every 15s
+  fetchAll();
+  setInterval(fetchAll, 15000);
+</script>
+</body>
+</html>
